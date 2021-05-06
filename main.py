@@ -3,12 +3,13 @@ import random
 import torch
 import torch.optim as optim
 import torch.nn as nn
+from PIL import Image
 from torch.utils.data import DataLoader
 from model.simple_custom_net import SimpleAnimeNet
 from dataset.dataset_interface import AnimeDataset
-
-IMAGE_HEIGHT = 32
-IMAGE_WIDTH = 32
+from dataset.dataset_interface import transform
+IMAGE_HEIGHT = 64
+IMAGE_WIDTH = 64
 TRAIN_BATCH_SIZE = 8
 TEST_BATCH_SIZE = 2
 TRAIN_EPOCH = 50
@@ -132,7 +133,20 @@ def test(model, testLoader, characterNames, device):
     print("\n[Validation Accuracy]")
     _print_accuracy(correct_pred, total_pred, characterNames)
 
-
+def predict(model, imagePath, characterNames, device):
+    model.eval()
+    with torch.no_grad():
+        image = Image.open(imagePath, mode='r')
+        image = image.convert('RGB')
+        _, image = transform(None, image, (IMAGE_HEIGHT, IMAGE_WIDTH), split="TEST")
+        image = image.to(device)
+        image = torch.reshape(image, (1, image.shape[0], image.shape[1], image.shape[2]))
+        outputs = model(image)
+        _, predictions = torch.max(outputs, 1)
+        prediction = predictions[0]
+        print("Predict", imagePath, "is", ind_to_label(int(prediction), characterNames))
+        return prediction
+    
 def main():
     labels = read_labels('dataset\\labels.txt')
     all_data, all_data_count = get_data_path('dataset\\cropped', labels)
@@ -157,11 +171,13 @@ def main():
     
     for epoch in range(TRAIN_EPOCH):
     
-        train(model, optimizer, trainLoader, criterion, device, epoch, labels, log_interval=len(trainLoader))
+        train(model, optimizer, trainLoader, criterion, device, epoch, labels, log_interval=50)
 
         test(model, testLoader, labels, device)
     
     # print(all_data)
     # print(all_data_count)
+    predict(model, 'Ruri Gokou_350_0.jpg', labels, device)
+    predict(model, 'Shana_370_0.jpg', labels, device)
 if __name__ == "__main__":
     main()
