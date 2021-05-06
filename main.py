@@ -3,17 +3,52 @@ import random
 import torch
 import torch.optim as optim
 import torch.nn as nn
+import torchvision.transforms as transforms
 from PIL import Image
 from torch.utils.data import DataLoader
 from model.simple_custom_net import SimpleAnimeNet
+from model.alexnet import alex_net
+
 from dataset.dataset_interface import AnimeDataset
 from dataset.dataset_interface import transform
-IMAGE_HEIGHT = 64
-IMAGE_WIDTH = 64
-TRAIN_BATCH_SIZE = 8
+
+IMAGE_HEIGHT = 256
+IMAGE_WIDTH = 256
+TRAIN_BATCH_SIZE = 16
 TEST_BATCH_SIZE = 2
 TRAIN_EPOCH = 50
 USE_CUDA = True
+splitted = True # whether train and test are splitted
+model_used = "alexnet" # "simple"
+apply_augmentations = True
+compute_mean_std = False # do we want to compute the mean/std of dataset
+
+def compute_ds_mean_std(labels):
+    # get mean and standard deviation in the dataset
+
+    all_data, all_data_count = get_data_path('dataset\\dataset_all', labels)
+    
+    transform = transforms.Compose([transforms.Resize((IMAGE_HEIGHT + 20, IMAGE_WIDTH + 20)), transforms.CenterCrop((IMAGE_HEIGHT, IMAGE_WIDTH)), transforms.ToTensor()])
+
+    dataset = AnimeDataset((IMAGE_HEIGHT, IMAGE_WIDTH), all_data, all_data_count, "TRAIN", transform)
+
+    means = []
+    stds = []
+    
+    for data in dataset:
+        img = data[1]
+        m = torch.mean(img)
+        o = torch.std(img)
+        means.append(m)
+        stds.append(o)
+        #print(m, o)
+
+    mean = torch.mean(torch.tensor(means))
+    std = torch.mean(torch.tensor(stds))
+    print("Means:", means)
+    print("stds:", stds)
+    print(mean, std)
+
 
 def read_labels(path):
     label_file = open(path, 'r')
@@ -35,8 +70,30 @@ def get_data_path(data_folder, labels):
     return all_data, all_data_count
 
 def load_dataset(train_data_dict, train_data_count, test_data_dict, test_data_count):
-    trainSet = AnimeDataset((IMAGE_HEIGHT, IMAGE_WIDTH), train_data_dict, train_data_count, "TRAIN")
-    testSet = AnimeDataset((IMAGE_HEIGHT, IMAGE_WIDTH), test_data_dict, test_data_count, "TEST")
+
+    # tensor(0.6557) tensor(0.2586)
+    normalize = transforms.Normalize(mean=[0.65, 0.65, 0.65],
+                                     std=[0.26, 0.26, 0.26])
+    train_transforms = None
+    test_tranforms = None                        
+    if apply_augmentations:
+        train_transforms = transforms.Compose([
+                transforms.RandomResizedCrop((IMAGE_HEIGHT, IMAGE_WIDTH)),
+                transforms.RandomRotation(10),
+                transforms.RandomHorizontalFlip(),
+                # maybe add ColorJitter here
+                transforms.ToTensor(),
+                normalize,
+            ])
+        test_tranforms = transforms.Compose([
+                transforms.Resize((IMAGE_HEIGHT + 20, IMAGE_WIDTH + 20)),
+                transforms.CenterCrop((IMAGE_HEIGHT, IMAGE_WIDTH)),
+                transforms.ToTensor(),
+                normalize,
+            ])
+    
+    trainSet = AnimeDataset((IMAGE_HEIGHT, IMAGE_WIDTH), train_data_dict, train_data_count, "TRAIN", train_transforms)
+    testSet = AnimeDataset((IMAGE_HEIGHT, IMAGE_WIDTH), test_data_dict, test_data_count, "TEST", test_tranforms)
 
     trainLoader = DataLoader(trainSet, batch_size=TRAIN_BATCH_SIZE, shuffle=True, num_workers=0, drop_last=True)
     testLoader = DataLoader(testSet, batch_size=TEST_BATCH_SIZE, shuffle=True, num_workers=0, drop_last=True)
@@ -146,18 +203,51 @@ def predict(model, imagePath, characterNames, device):
         prediction = predictions[0]
         print("Predict", imagePath, "is", ind_to_label(int(prediction), characterNames))
         return prediction
-    
+
+# save current state to disk
+def save_checkpoint(save_path, model, optimizer, epoch, loss):
+    torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            }, save_path)
+
+# load states from disk
+def load_checkpoint(NetClass, OptimizerClass, load_path):
+    model = NetClass()
+    optimizer = OptimizerClass(model.parameters(), lr=0.001, momentum=0.9)
+    checkpoint = torch.load(load_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch = checkpoint['epoch']
+    loss = checkpoint['loss']
+
+    return model, optimizer, epoch, loss
+
 def main():
     labels = read_labels('dataset\\labels.txt')
-    all_data, all_data_count = get_data_path('dataset\\cropped', labels)
-    train_data_dict, train_data_count, test_data_dict, test_data_count = split_dataset(all_data, all_data_count)
+    
+    if splitted:
+        train_data_dict, train_data_count = get_data_path('dataset\\train', labels)
+        test_data_dict, test_data_count = get_data_path('dataset\\test', labels)
+    else:
+        all_data, all_data_count = get_data_path('dataset\\cropped', labels)
+        train_data_dict, train_data_count, test_data_dict, test_data_count = split_dataset(all_data, all_data_count)
+    
+    if compute_mean_std:
+        compute_ds_mean_std(labels)
     
     trainLoader, testLoader = load_dataset(train_data_dict, train_data_count, test_data_dict, test_data_count)
 
     device = torch.device("cuda" if torch.cuda.is_available() and USE_CUDA else "cpu")
     print("Device using:", device)
 
-    model = SimpleAnimeNet(len(list(all_data_count.keys())))
+    if model_used == "alexnet":
+        model = alex_net(len(labels))
+    elif model_used == "simple":
+        model = SimpleAnimeNet(len(labels))
+
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
@@ -167,7 +257,7 @@ def main():
     print("total training batches:", len(trainLoader))
 
     print("total testing images:", len(testLoader.dataset))
-    print("total training batches:", len(testLoader))
+    print("total testing batches:", len(testLoader))
     
     for epoch in range(TRAIN_EPOCH):
     
@@ -179,5 +269,6 @@ def main():
     # print(all_data_count)
     predict(model, 'Ruri Gokou_350_0.jpg', labels, device)
     predict(model, 'Shana_370_0.jpg', labels, device)
+
 if __name__ == "__main__":
     main()

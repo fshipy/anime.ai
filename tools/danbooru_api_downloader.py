@@ -7,8 +7,11 @@ from urllib.parse import unquote, urlparse
 import aiohttp
 
 image_c = 0
-we_want = 1000
+we_want = 1200
 print_data = True
+other_tags = ["chartags:1"]
+all_non_other_tags = None
+download_other = True # download tag "chartags:1"
 async def queue_downloads(url):
     tags = unquote(url.split("tags=")[1].split("&")[0].replace("+", " ").strip())
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0"}
@@ -34,7 +37,7 @@ async def queue_downloads(url):
                     )
                     desired_path.mkdir(parents=True, exist_ok=True)
                     for item in data:
-                        if "file_url" in item and (not " " in item["tag_string_character"]):
+                        if "file_url" in item and (not " " in item["tag_string_character"]) and ((not download_other) or (item["tag_string_character"] not in all_non_other_tags)):
                             picture_url = item["file_url"]
                             picture_name = re.sub('[<>:"/|?*]', " ", unquote(urlparse(picture_url).path.split("/")[-1]))
                             picture_path = desired_path.joinpath(picture_name)
@@ -79,7 +82,12 @@ async def main():
         print(f"Reading {rulefile} . . .")
         with open(rulefile, "r", encoding="utf-8") as f:
             tags = f.read().splitlines()
-
+    global all_non_other_tags
+    all_non_other_tags = tags
+    if download_other:
+        global we_want
+        tags = other_tags
+        we_want = 1500 # we want 1500 of each
     for t in tags:
         print("Started scraping " + t)
         tasks = [
