@@ -8,6 +8,7 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from model.simple_custom_net import SimpleAnimeNet
 from model.alexnet import alex_net
+from model.vgg11 import *
 
 from dataset.dataset_interface import AnimeDataset
 from dataset.dataset_interface import transform
@@ -15,39 +16,96 @@ from dataset.dataset_interface import transform
 IMAGE_HEIGHT = 256
 IMAGE_WIDTH = 256
 TRAIN_BATCH_SIZE = 16
-TEST_BATCH_SIZE = 2
+TEST_BATCH_SIZE = 4
 TRAIN_EPOCH = 50
 USE_CUDA = True
 splitted = True # whether train and test are splitted
-model_used = "alexnet" # "simple"
+
+"""
+available networks:
+
+simple
+alexnet
+vgg11
+vgg11_bn
+
+"""
+model_used = "vgg11"
 apply_augmentations = True
 compute_mean_std = False # do we want to compute the mean/std of dataset
+lr = 5e-3
+momentum = 0.9
+weight_decay = 5e-4
 
 def compute_ds_mean_std(labels):
     # get mean and standard deviation in the dataset
 
     all_data, all_data_count = get_data_path('dataset\\dataset_all', labels)
+    print("labels", labels)
     
     transform = transforms.Compose([transforms.Resize((IMAGE_HEIGHT + 20, IMAGE_WIDTH + 20)), transforms.CenterCrop((IMAGE_HEIGHT, IMAGE_WIDTH)), transforms.ToTensor()])
 
     dataset = AnimeDataset((IMAGE_HEIGHT, IMAGE_WIDTH), all_data, all_data_count, "TRAIN", transform)
 
     means = []
+    means_0 = []
+    means_1 = []
+    means_2 = []
     stds = []
+    stds_0 = []
+    stds_1 = []
+    stds_2 = []
     
     for data in dataset:
         img = data[1]
         m = torch.mean(img)
+        m0 = torch.mean(img[0])
+        m1 = torch.mean(img[1])
+        m2 = torch.mean(img[2])
+
         o = torch.std(img)
+        o_0 = torch.std(img[0])
+        o_1 = torch.std(img[1])
+        o_2 = torch.std(img[2])
+
         means.append(m)
+        means_0.append(m0)
+        means_1.append(m1)
+        means_2.append(m2)
         stds.append(o)
+        stds_0.append(o_0)
+        stds_1.append(o_1)
+        stds_2.append(o_2)
         #print(m, o)
 
     mean = torch.mean(torch.tensor(means))
+    mean0 = torch.mean(torch.tensor(means_0))
+    mean1 = torch.mean(torch.tensor(means_1))
+    mean2 = torch.mean(torch.tensor(means_2))
     std = torch.mean(torch.tensor(stds))
+    std0 = torch.mean(torch.tensor(stds_0))
+    std1 = torch.mean(torch.tensor(stds_1))
+    std2 = torch.mean(torch.tensor(stds_2))
     print("Means:", means)
     print("stds:", stds)
-    print(mean, std)
+    print("MEANS:")
+    print(mean, mean0, mean1, mean2)
+    print("STD:")
+    print(std, std0, std1, std2)
+
+    """
+    with Others (10 classes)
+    MEANS:
+    tensor(0.6862) [tensor(0.7168) tensor(0.6650) tensor(0.6770)]
+    STD:
+    tensor(0.2488) [tensor(0.2401) tensor(0.2476) tensor(0.2352)]
+
+    without Others (10 classes)
+    MEANS:
+    tensor(0.6902) [tensor(0.7194) tensor(0.6689) tensor(0.6822)]
+    STD:
+    tensor(0.2482) [tensor(0.2395) tensor(0.2472) tensor(0.2345)]
+    """
 
 
 def read_labels(path):
@@ -72,8 +130,8 @@ def get_data_path(data_folder, labels):
 def load_dataset(train_data_dict, train_data_count, test_data_dict, test_data_count):
 
     # tensor(0.6557) tensor(0.2586)
-    normalize = transforms.Normalize(mean=[0.65, 0.65, 0.65],
-                                     std=[0.26, 0.26, 0.26])
+    normalize = transforms.Normalize(mean=[0.7194, 0.6689, 0.6822],
+                                     std=[0.2395, 0.2472, 0.2345])
     train_transforms = None
     test_tranforms = None                        
     if apply_augmentations:
@@ -126,9 +184,11 @@ def _print_accuracy(correct_pred, total_pred, characterNames):
                                                        accuracy))
         all_accuracy.append(accuracy)
     
-    print("Mean Accuracy: {:.1f} %".format(sum(all_accuracy) / len(characterNames)))
+    mean_acc = sum(all_accuracy) / len(characterNames)
+    print("Mean Accuracy: {:.1f} %".format(mean_acc))
     print("correct_pred", correct_pred)
     print("total_pred", total_pred)
+    return mean_acc
 
 def train(model, optimizer, trainLoader, criterion, device, epoch, characterNames, log_interval):
 
@@ -164,8 +224,11 @@ def train(model, optimizer, trainLoader, criterion, device, epoch, characterName
                     correct_pred[ind_to_label(label, characterNames)] += 1
                 total_pred[ind_to_label(label, characterNames)] += 1
 
+        del labels, images, loss, outputs, predictions # free some memory since their histories may be stored
+
     print("\n[Training Accuracy]")
-    _print_accuracy(correct_pred, total_pred, characterNames)
+    train_acc = _print_accuracy(correct_pred, total_pred, characterNames)
+    return train_acc # return the mean
 
 def test(model, testLoader, characterNames, device):
 
@@ -186,9 +249,12 @@ def test(model, testLoader, characterNames, device):
                 if label == prediction:
                     correct_pred[ind_to_label(label, characterNames)] += 1
                 total_pred[ind_to_label(label, characterNames)] += 1
+
+            del labels, images, outputs, predictions # free some memory since their histories may be stored
     
     print("\n[Validation Accuracy]")
-    _print_accuracy(correct_pred, total_pred, characterNames)
+    val_acc = _print_accuracy(correct_pred, total_pred, characterNames)
+    return val_acc # return the mean
 
 def predict(model, imagePath, characterNames, device):
     model.eval()
@@ -247,11 +313,16 @@ def main():
         model = alex_net(len(labels))
     elif model_used == "simple":
         model = SimpleAnimeNet(len(labels))
+    elif model_used == "vgg11":
+        model = vgg11(len(labels))
+    elif model_used == "vgg11_bn":
+        model = vgg11_bn(len(labels)) 
 
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
     print("total training images:", len(trainLoader.dataset))
     print("total training batches:", len(trainLoader))
@@ -263,8 +334,9 @@ def main():
     
         train(model, optimizer, trainLoader, criterion, device, epoch, labels, log_interval=50)
 
-        test(model, testLoader, labels, device)
-    
+        val_acc = test(model, testLoader, labels, device)
+        scheduler.step(val_acc)
+        save_checkpoint("anime_checkpoint.pt", model, optimizer, epoch, criterion)
     # print(all_data)
     # print(all_data_count)
     predict(model, 'Ruri Gokou_350_0.jpg', labels, device)

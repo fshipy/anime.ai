@@ -11,7 +11,7 @@ we_want = 1200
 print_data = True
 other_tags = ["chartags:1"]
 all_non_other_tags = None
-download_other = True # download tag "chartags:1"
+download_other = False # download tag "chartags:1"
 async def queue_downloads(url):
     tags = unquote(url.split("tags=")[1].split("&")[0].replace("+", " ").strip())
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0"}
@@ -37,7 +37,7 @@ async def queue_downloads(url):
                     )
                     desired_path.mkdir(parents=True, exist_ok=True)
                     for item in data:
-                        if "file_url" in item and (not " " in item["tag_string_character"]) and ((not download_other) or (item["tag_string_character"] not in all_non_other_tags)):
+                        if "file_url" in item and (item["tag_count_character"] == 1) and ((not download_other) or (item["tag_string_character"] not in all_non_other_tags)) and (item["file_ext"] == "jpg" or item["file_ext"] == "png" or item["file_ext"] == "jpeg"):
                             picture_url = item["file_url"]
                             picture_name = re.sub('[<>:"/|?*]', " ", unquote(urlparse(picture_url).path.split("/")[-1]))
                             picture_path = desired_path.joinpath(picture_name)

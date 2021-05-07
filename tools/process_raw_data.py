@@ -13,7 +13,14 @@ directory_name_mapping = {
     "remilia_scarlet": "Remilia Scarlet",
     "shana": "Shana",
     "tohsaka_rin": "Rin Tohsaka",
+    "cirno": "Cirno",
+    "hakurei_reimu": "Reimu Hakurei",
+    "hatsune_miku": "Miku Hatsune",
+    "nagato_yuki": "Yuki Nagato",
+    "rem_(re zero)": "Rem",
+    "takamachi_nanoha": "Nanoha Takamachi",
     "chartags 1": "Others",
+
 }
 
 def read_tags(tag_file_name="tags.txt"):
@@ -26,8 +33,8 @@ def read_tags(tag_file_name="tags.txt"):
     
 def main():
     batchdir, tags = read_tags()
-    tags = ["chartags 1"]
-    
+    tags = ["cirno", "hakurei_reimu", "hatsune_miku", "nagato_yuki", "takamachi_nanoha", "rem_(re zero)"]
+
     for tag in tags:
         directory_path = batchdir.joinpath(tag)
         file_dir_path = directory_path.joinpath("danbooru.donmai.us")
@@ -61,7 +68,7 @@ def make_train_test(test_split=0.2):
     except:
         raise
 
-    tags = ["chartags 1"]
+    #tags = ["cirno", "hakurei_reimu", "hatsune_miku", "nagato_yuki", "takamachi_nanoha", "rem_(re zero)"]
 
     for t in tags:
         dir_path = batchdir.joinpath(directory_name_mapping[t])
@@ -84,5 +91,5 @@ def make_train_test(test_split=0.2):
             new_path = test_path_tag.joinpath(f)
             shutil.copy(old_path, new_path)
         
-#main()
-make_train_test()
+main()
+#make_train_test()
