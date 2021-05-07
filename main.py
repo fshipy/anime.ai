@@ -94,7 +94,7 @@ def compute_ds_mean_std(labels):
     print(std, std0, std1, std2)
 
     """
-    with Others (10 classes)
+    with Others (11 classes)
     MEANS:
     tensor(0.6862) [tensor(0.7168) tensor(0.6650) tensor(0.6770)]
     STD:
@@ -335,12 +335,8 @@ def main():
         train(model, optimizer, trainLoader, criterion, device, epoch, labels, log_interval=50)
 
         val_acc = test(model, testLoader, labels, device)
-        scheduler.step(val_acc)
+        scheduler.step(val_acc) # maybe we can try average training loss / average validation loss?
         save_checkpoint("anime_checkpoint.pt", model, optimizer, epoch, criterion)
-    # print(all_data)
-    # print(all_data_count)
-    predict(model, 'Ruri Gokou_350_0.jpg', labels, device)
-    predict(model, 'Shana_370_0.jpg', labels, device)
 
 if __name__ == "__main__":
     main()
