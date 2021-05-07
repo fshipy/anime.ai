@@ -30,7 +30,7 @@ vgg11
 vgg11_bn
 
 """
-model_used = "vgg11"
+model_used = "alexnet"
 apply_augmentations = True
 compute_mean_std = False # do we want to compute the mean/std of dataset
 lr = 5e-3

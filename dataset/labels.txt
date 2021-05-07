@@ -6,5 +6,5 @@ Miku Hatsune
 Cirno
 Nanoha Takamachi
 Reimu Hakurei
-REM
+Rem
 Yuki Nagato
