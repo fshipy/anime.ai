@@ -1,0 +1,56 @@
+Alexnet
+[Validation Accuracy]
+Accuracy for character Mikoto Misaka is: 74.4 %
+Accuracy for character Rin Tohsaka is: 77.8 %
+Accuracy for character Remilia Scarlet is: 79.0 %
+Accuracy for character Ruri Gokou is: 82.4 %
+Accuracy for character Miku Hatsune is: 78.0 %
+Accuracy for character Cirno is: 70.2 %
+Accuracy for character Nanoha Takamachi is: 82.4 %
+Accuracy for character Reimu Hakurei is: 76.3 %
+Accuracy for character Rem   is: 87.8 %
+Accuracy for character Yuki Nagato is: 78.9 %
+Mean Accuracy: 78.7 %
+
+Alexnet
+[Validation Accuracy]
+Accuracy for character Mikoto Misaka is: 74.7 %
+Accuracy for character Rin Tohsaka is: 79.9 %
+Accuracy for character Remilia Scarlet is: 76.5 %
+Accuracy for character Ruri Gokou is: 80.3 %
+Accuracy for character Miku Hatsune is: 75.8 %
+Accuracy for character Cirno is: 65.7 %
+Accuracy for character Nanoha Takamachi is: 81.1 %
+Accuracy for character Reimu Hakurei is: 73.8 %
+Accuracy for character Rem   is: 86.1 %
+Accuracy for character Yuki Nagato is: 74.8 %
+Accuracy for character Others is: 25.8 %
+Mean Accuracy: 72.2 %
+
+VGG-11
+[Validation Accuracy]
+Accuracy for character Mikoto Misaka is: 81.4 %
+Accuracy for character Rin Tohsaka is: 87.8 %
+Accuracy for character Remilia Scarlet is: 82.8 %
+Accuracy for character Ruri Gokou is: 82.0 %
+Accuracy for character Miku Hatsune is: 80.1 %
+Accuracy for character Cirno is: 75.3 %
+Accuracy for character Nanoha Takamachi is: 85.7 %
+Accuracy for character Reimu Hakurei is: 78.1 %
+Accuracy for character Rem   is: 84.8 %
+Accuracy for character Yuki Nagato is: 81.1 %
+Mean Accuracy: 81.9 %
+
+VGG-11 BN
+[Validation Accuracy]
+Accuracy for character Mikoto Misaka is: 79.8 %
+Accuracy for character Rin Tohsaka is: 85.4 %
+Accuracy for character Remilia Scarlet is: 78.5 %
+Accuracy for character Ruri Gokou is: 85.3 %
+Accuracy for character Miku Hatsune is: 79.7 %
+Accuracy for character Cirno is: 73.5 %
+Accuracy for character Nanoha Takamachi is: 90.3 %
+Accuracy for character Reimu Hakurei is: 75.9 %
+Accuracy for character Rem   is: 85.2 %
+Accuracy for character Yuki Nagato is: 78.2 %
+Mean Accuracy: 81.2 %
