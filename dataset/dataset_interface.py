@@ -3,6 +3,7 @@ import os
 import random
 import numpy as np
 import torchvision.transforms.functional as FT
+import torch.nn.functional as F
 from PIL import Image
 from torch.utils.data import Dataset
 
@@ -71,8 +72,8 @@ class AnimeDataset(Dataset):
     """
     A PyTorch Dataset class to be used in a PyTorch DataLoader to create batches.
     """
-
-    def __init__(self, input_shape, data_path, data_count, split, transform=None):
+    # num_class without others
+    def __init__(self, input_shape, data_path, data_count, split, transform=None, num_class=10):
         """
         :param input_shape (tuple): (height, width) of a sample image
         :param data_path (dict): dictionary that maps label to list of image path
@@ -95,6 +96,7 @@ class AnimeDataset(Dataset):
         self.all_data = dict_to_ltuple(data_path)
         self.input_shape = input_shape
         self.transform = transform
+        self.num_class = num_class
         c = 0
         for v in list(data_count.values()):
             c += v
@@ -105,6 +107,10 @@ class AnimeDataset(Dataset):
         image = Image.open(self.all_data[i][1], mode='r')
         image = image.convert('RGB')
         label = torch.LongTensor([self.all_data[i][0]])[0]
+        if label < self.num_class:
+            label = F.one_hot(label, self.num_class)
+        else:#  other
+            label = torch.zeros(self.num_class).long()
         # Apply transformations
         if self.transform: 
             image = self.transform(image)
