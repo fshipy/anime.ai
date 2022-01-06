@@ -1,4 +1,4 @@
-# anime.ai
+# Anime.ai
 a deep learning model to recognize anime characters 
 
 # Classification Dataset
