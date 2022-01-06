@@ -1,5 +1,5 @@
 # Anime.ai
-a deep learning model to recognize anime characters 
+a deep learning models to work with anime characters (recognition and generation) 
 
 # Classification Dataset
 
@@ -19,7 +19,13 @@ We made few more datasets with more images for some characters. https://drive.go
 
 The images are retrieved from https://danbooru.donmai.us/
 
+# Generate New Art Works (Images) for Specific Characters
+
+We experimented training a stylegan2 using https://github.com/lucidrains/stylegan2-pytorch on one of the above datasets to
+generate new images (see `art_gen`).
+
 # Future Improvements
 
 - Fine-tune the classfication models, and apply them into videos
 - Experiment with GANs on character datasets, try making improvements on generated results with classfication models
+- Develope a pipeline that automatically search and filter new anime art works on the internet and improve the generator.
