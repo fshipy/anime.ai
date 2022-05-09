@@ -11,7 +11,7 @@ The images are retrieved from https://danbooru.donmai.us/
 
 # Classification Models
 
-ResNet18 (with ImageNet Pretrained Weights) can achieve 0.948 accuracy score on classifying 10 characters. Checkpoint: https://drive.google.com/file/d/1qb-JTIurLLB1amqCgzDtZl579xHtR3QF/view?usp=sharing
+ResNet18 (with ImageNet Pretrained Weights) can achieve 0.948 accuracy score on classifying 10 characters. Checkpoint: https://drive.google.com/drive/u/6/folders/1Re-oBKIB_Trp2GCDkDM-iZTOl5UHPaOb
 
 # Dataset for Specific Characters
 
