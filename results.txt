@@ -54,3 +54,17 @@ Accuracy for character Reimu Hakurei is: 75.9 %
 Accuracy for character Rem   is: 85.2 %
 Accuracy for character Yuki Nagato is: 78.2 %
 Mean Accuracy: 81.2 %
+
+ResNet18 Pretrained ImageNet Weights
+[Validation Accuracy]
+Accuracy for character Mikoto Misaka is: 93.3 %
+Accuracy for character Rin Tohsaka is: 94.1 %
+Accuracy for character Remilia Scarlet is: 92.4 %
+Accuracy for character Ruri Gokou is: 97.5 %
+Accuracy for character Miku Hatsune is: 95.8 %
+Accuracy for character Cirno is: 93.3 %
+Accuracy for character Nanoha Takamachi is: 96.6 %
+Accuracy for character Reimu Hakurei is: 93.7 %
+Accuracy for character Rem   is: 97.9 %
+Accuracy for character Yuki Nagato is: 93.7 %
+Mean Accuracy: 94.8 %

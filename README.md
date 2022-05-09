@@ -9,6 +9,10 @@ extract after downloading and put `train` and `test` under `dataset`
 
 The images are retrieved from https://danbooru.donmai.us/
 
+# Classification Models
+
+ResNet18 (with ImageNet Pretrained Weights) can achieve 0.948 accuracy score on classifying 10 characters. Checkpoint: https://drive.google.com/file/d/1qb-JTIurLLB1amqCgzDtZl579xHtR3QF/view?usp=sharing
+
 # Dataset for Specific Characters
 
 We made few more datasets with more images for some characters. https://drive.google.com/drive/folders/1Q6vBmHF-3ZenlP9nETkFdNyTP_GDcXbd?usp=sharing

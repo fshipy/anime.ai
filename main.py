@@ -9,15 +9,16 @@ from torch.utils.data import DataLoader
 from model.simple_custom_net import SimpleAnimeNet
 from model.alexnet import alex_net
 from model.vgg11 import *
+from model.resnet18 import resnet18
 
 from dataset.dataset_interface import AnimeDataset
 from dataset.dataset_interface import transform
 
-IMAGE_HEIGHT = 256
-IMAGE_WIDTH = 256
+IMAGE_HEIGHT = 224
+IMAGE_WIDTH = 224
 TRAIN_BATCH_SIZE = 16
 TEST_BATCH_SIZE = 4
-TRAIN_EPOCH = 50
+TRAIN_EPOCH = 100
 USE_CUDA = True
 splitted = True # whether train and test are splitted
 
@@ -30,7 +31,8 @@ vgg11
 vgg11_bn
 
 """
-model_used = "alexnet"
+model_used = "resnet18"
+pretrained = True
 apply_augmentations = True
 compute_mean_std = False # do we want to compute the mean/std of dataset
 lr = 5e-3
@@ -136,16 +138,17 @@ def load_dataset(train_data_dict, train_data_count, test_data_dict, test_data_co
     test_tranforms = None                        
     if apply_augmentations:
         train_transforms = transforms.Compose([
-                transforms.RandomResizedCrop((IMAGE_HEIGHT, IMAGE_WIDTH)),
-                transforms.RandomRotation(10),
+                transforms.Resize((IMAGE_HEIGHT + 20, IMAGE_WIDTH + 20)),
+                transforms.RandomCrop((IMAGE_HEIGHT, IMAGE_WIDTH)),
+                transforms.RandomRotation(15),
                 transforms.RandomHorizontalFlip(),
-                # maybe add ColorJitter here
+                transforms.ColorJitter(0.2, 0.2, 0.1, 0.1),
+                transforms.RandomGrayscale(0.1),
                 transforms.ToTensor(),
                 normalize,
             ])
         test_tranforms = transforms.Compose([
-                transforms.Resize((IMAGE_HEIGHT + 20, IMAGE_WIDTH + 20)),
-                transforms.CenterCrop((IMAGE_HEIGHT, IMAGE_WIDTH)),
+                transforms.Resize((IMAGE_HEIGHT, IMAGE_WIDTH)),
                 transforms.ToTensor(),
                 normalize,
             ])
@@ -317,12 +320,14 @@ def main():
         model = vgg11(len(labels))
     elif model_used == "vgg11_bn":
         model = vgg11_bn(len(labels)) 
+    elif model_used == "resnet18":
+        model = resnet18(len(labels), pretrained) 
 
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=TRAIN_EPOCH, eta_min=1e-6)
 
     print("total training images:", len(trainLoader.dataset))
     print("total training batches:", len(trainLoader))
@@ -334,9 +339,10 @@ def main():
     
         train(model, optimizer, trainLoader, criterion, device, epoch, labels, log_interval=50)
 
-        val_acc = test(model, testLoader, labels, device)
-        scheduler.step(val_acc) # maybe we can try average training loss / average validation loss?
+        test_acc = test(model, testLoader, labels, device)
+        scheduler.step() # maybe we can try average training loss / average validation loss?
         save_checkpoint("anime_checkpoint.pt", model, optimizer, epoch, criterion)
+    test(model, testLoader, labels, device)
 
 if __name__ == "__main__":
     main()
